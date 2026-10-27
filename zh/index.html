@@ -53,4 +53,165 @@ let logs=[];function renderLogs(){logList.innerHTML=logs.length?'<h3>已保存�
 const ids=['valuesNote','drainNote','catFear','severity','likelihood','catOutcomes','catCope','catPrepare','catControl','catOutside','catFriend','catBalanced','situation','control','nextStep','support','reviewDate','expenses','savings','income'];function savePlan(){let data={};ids.forEach(id=>data[id]=document.getElementById(id).value);data.picked=picked;data.logs=logs;localStorage.setItem('workplaceClarityZH',JSON.stringify(data));toastMsg('已保存在当前设备。')}function loadPlan(){try{let d=JSON.parse(localStorage.getItem('workplaceClarityZH'));if(!d)return;ids.forEach(id=>{if(d[id]!=null)document.getElementById(id).value=d[id]});picked=d.picked||[];logs=d.logs||[];drawValues();renderLogs();runwayCalc();updateThoughtScales()}catch(e){}}function clearAll(){if(!confirm('确定清除当前浏览器中的笔记和事件记录吗？'))return;localStorage.removeItem('workplaceClarityZH');location.reload()}function escapeHtml(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}function toastMsg(s){toast.textContent=s;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)}function updateThoughtScales(){severityOut.value=severity.value+'/10';likelihoodOut.value=likelihood.value+'/10'}severity.oninput=likelihood.oninput=updateThoughtScales;balancedCopy.onclick=()=>{if(!catBalanced.value.trim())return toastMsg('请先写下一个更平衡的想法。');navigator.clipboard.writeText(catBalanced.value);toastMsg('平衡想法已复制。')};
 document.querySelectorAll('.copy').forEach(b=>b.onclick=()=>{navigator.clipboard.writeText(b.parentElement.querySelector('p').textContent);toastMsg('已复制。')});document.querySelectorAll('.checkrow .chip').forEach(b=>b.onclick=()=>b.classList.toggle('on'));ids.forEach(id=>document.getElementById(id).addEventListener('change',savePlan));addEventListener('beforeprint',()=>document.querySelectorAll('textarea').forEach(x=>{x.dataset.printHeight=x.style.height;x.style.height=Math.max(42,x.scrollHeight)+'px'}));addEventListener('afterprint',()=>document.querySelectorAll('textarea').forEach(x=>x.style.height=x.dataset.printHeight||''));
 const preferred=localStorage.getItem('workplaceTheme')||((matchMedia('(prefers-color-scheme:dark)').matches)?'dark':'light');document.documentElement.classList.toggle('dark',preferred==='dark');theme.onclick=()=>{document.documentElement.classList.toggle('dark');localStorage.setItem('workplaceTheme',document.documentElement.classList.contains('dark')?'dark':'light')};onscroll=()=>up.style.display=scrollY>500?'block':'none';up.onclick=()=>scrollTo({top:0,behavior:'smooth'});loadPlan();runwayCalc();
-</script></body></html>
+</script>
+<!-- Journey Kit: pacing + progress layer -->
+<style id="gj-css">
+/* ===== Journey Kit (gamified pacing layer) ===== */
+:root{--gj-accent:#2e6f6a;--gj-ink:#1d2b2a;--gj-soft:#eef4f1}
+.gj-banner{background:#fff;color:var(--gj-ink);border:1px solid rgba(0,0,0,.09);border-left:6px solid var(--gj-accent);border-radius:18px;padding:20px 22px;margin:22px 0;box-shadow:0 10px 30px rgba(20,40,40,.08);font-family:inherit}
+.gj-banner h2{margin:0 0 6px;font-size:1.3rem;line-height:1.25}
+.gj-banner p{margin:0 0 12px;opacity:.78;max-width:65ch}
+.gj-bar{height:11px;border-radius:99px;background:var(--gj-soft);overflow:hidden;margin:10px 0 6px}
+.gj-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gj-accent),#7fb8a4);width:0;transition:width .6s cubic-bezier(.2,.9,.3,1)}
+.gj-stats{display:flex;gap:14px;flex-wrap:wrap;font-weight:700;font-size:.92rem;margin:6px 0 12px}
+.gj-stats .gj-xp{color:var(--gj-accent)}
+.gj-actions{display:flex;gap:10px;flex-wrap:wrap}
+.gj-btn{border:1px solid var(--gj-accent);background:var(--gj-accent);color:#fff;border-radius:12px;padding:10px 15px;font-weight:800;cursor:pointer;font:inherit;font-size:.95rem}
+.gj-btn.ghost{background:transparent;color:var(--gj-accent)}
+.gj-btn:hover{filter:brightness(1.07)}
+.gj-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.gj-badge{border:1px solid rgba(0,0,0,.12);border-radius:99px;padding:6px 12px;font-size:.82rem;font-weight:750;background:var(--gj-soft);color:var(--gj-ink)}
+.gj-badge.locked{opacity:.4;filter:grayscale(.8)}
+.gj-complete{margin-top:12px;background:#fdf6e0;border:1px solid #e6cf8a;border-radius:12px;padding:11px 14px;font-weight:700}
+.gj-chip{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--gj-soft);border:1px dashed rgba(0,0,0,.18);border-radius:12px;padding:8px 12px;margin:0 0 16px;font-size:.86rem}
+.gj-chip .gj-stop-label{font-weight:850;letter-spacing:.02em;color:var(--gj-ink)}
+.gj-chip .gj-stop-title{opacity:.65;font-weight:600}
+.gj-mark{border:1px solid var(--gj-accent);background:#fff;color:var(--gj-accent);border-radius:99px;padding:6px 12px;font-weight:800;cursor:pointer;font:inherit;font-size:.84rem;white-space:nowrap}
+.gj-mark.done{background:var(--gj-accent);color:#fff}
+.gj-pill{position:fixed;right:16px;bottom:16px;z-index:999;background:var(--gj-accent);color:#fff;border:none;border-radius:99px;padding:11px 16px;font-weight:850;box-shadow:0 10px 26px rgba(0,0,0,.25);cursor:pointer;font:inherit;font-size:.92rem}
+.gj-pill:hover{filter:brightness(1.08)}
+.gj-focusnav{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;z-index:1000;background:#17302e;color:#fff;border-radius:99px;padding:9px 12px;display:none;align-items:center;gap:8px;box-shadow:0 14px 34px rgba(0,0,0,.32);font:inherit}
+body.gj-focus .gj-focusnav{display:flex}
+.gj-focusnav button{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:99px;padding:8px 13px;font-weight:800;cursor:pointer;font:inherit;font-size:.88rem;white-space:nowrap}
+.gj-focusnav button.gj-next{background:#fff;color:#17302e;border-color:#fff}
+.gj-focusnav .gj-dots{display:flex;gap:5px;padding:0 4px}
+.gj-focusnav .gj-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35);border:none;padding:0;cursor:pointer}
+.gj-focusnav .gj-dot.seen{background:#8fd0b8}
+.gj-focusnav .gj-dot.now{background:#fff;transform:scale(1.3)}
+body.gj-focus .gj-stop{display:none!important}
+body.gj-focus .gj-stop.gj-current{display:block!important}
+body.gj-focus .gj-banner,body.gj-focus .gj-pill{display:none!important}
+#gj-confetti{position:fixed;inset:0;pointer-events:none;z-index:2000}
+@media(max-width:640px){.gj-banner{padding:16px}.gj-focusnav{max-width:calc(100% - 16px);flex-wrap:wrap;justify-content:center;border-radius:22px}.gj-pill{bottom:14px;right:14px}}
+@media print{.gj-banner,.gj-chip,.gj-pill,.gj-focusnav{display:none!important}}
+
+</style>
+<script id="gj-kit">
+/* ===== Journey Kit: pacing + progress layer (additive; never alters tool data) ===== */
+(function(){
+"use strict";
+var S={"bannerTitle": "你的探索之旅", "bannerSub": "一次只走一站。探索完每一站就标记一下，赢取经验，随时从上次停下的地方继续——也可以打开专注模式，一次只看一站。", "stopLabel": "第 {n} 站，共 {total} 站", "mark": "标记为已探索", "marked": "已探索 ✓", "xpPer": "+20 经验", "resume": "继续上次的进度", "focusOn": "专注模式：一次一站", "focusOff": "退出专注", "prev": "← 上一站", "next": "下一站 →", "finish": "完成 ✓", "progress": "已探索 {done} / {total} 站", "level": "等级", "levelTitles": ["探索者", "寻路者", "同行者", "领路者", "远行者", "向导"], "badges": {"first": "第一步", "half": "半程达成", "full": "旅程完成"}, "completeMsg": "旅程完成——你已经探索了每一站，做得很好。"}, FLAVOR="playful", SLUG="work-clarity-explorer", KEY="gj-"+SLUG;
+var PLAYFUL = FLAVOR==="playful";
+var state={explored:[],xp:0,bonuses:{},focus:false,current:0};
+try{var saved=JSON.parse(localStorage.getItem(KEY)||"null");if(saved&&typeof saved==="object"){state.explored=saved.explored||[];state.xp=saved.xp||0;state.bonuses=saved.bonuses||{}}}catch(e){}
+var stops=[], els={};
+function save(){try{localStorage.setItem(KEY,JSON.stringify({explored:state.explored,xp:state.xp,bonuses:state.bonuses}))}catch(e){}}
+function $(s,r){return (r||document).querySelector(s)}
+function fmt(t,o){return t.replace(/\{(\w+)\}/g,function(m,k){return o[k]!=null?o[k]:m})}
+function accent(){var m=document.querySelector('meta[name="theme-color"]');var c=m&&m.getAttribute("content");if(c&&/^#[0-9a-f]{6}$/i.test(c))document.documentElement.style.setProperty("--gj-accent",c)}
+function confetti(n){if(!PLAYFUL)return;try{if(typeof matchMedia!=="undefined"&&matchMedia("(prefers-reduced-motion: reduce)").matches)return;var c=document.createElement("canvas");c.id="gj-confetti";document.body.appendChild(c);var x=c.getContext("2d");if(!x){c.remove();return}c.width=innerWidth;c.height=innerHeight;var cols=["#a9c7b4","#e6b86a","#cbc4e7","#d98d82","#8fd0b8"];var ps=[];for(var i=0;i<(n||70);i++)ps.push({x:Math.random()*c.width,y:-20-Math.random()*c.height*.3,w:6+Math.random()*7,h:8+Math.random()*9,vy:2.2+Math.random()*3.2,vx:-1.4+Math.random()*2.8,r:Math.random()*3.14,vr:-.12+Math.random()*.24,col:cols[i%cols.length]});var t0=performance.now();(function frame(t){x.clearRect(0,0,c.width,c.height);ps.forEach(function(p){p.y+=p.vy;p.x+=p.vx;p.r+=p.vr;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.col;x.fillRect(-p.w/2,-p.h/2,p.w,p.h);x.restore()});if(t-t0<2400)requestAnimationFrame(frame);else{c.remove()}})(t0)}catch(e){}}
+function stopTitle(el){var h=el.querySelector("h2,h3");var t=h?h.textContent.trim():"";return t.length>64?t.slice(0,64)+"…":t}
+function findStops(){
+  var main=document.querySelector("main")||document.body;
+  var els=[].slice.call(main.querySelectorAll(":scope > section"));
+  if(els.length<3){var all=[].slice.call(main.querySelectorAll("section")).filter(function(el){return !el.parentElement.closest("section")});if(all.length>els.length)els=all}
+  return els.filter(function(el){
+    if(el.id==="gj-banner")return false;
+    if(el.hasAttribute("hidden"))return false;
+    var cls=(el.className||"").toString();
+    if(/hero|print|modal/i.test(cls))return false;
+    if(el.querySelector("h1")&&!el.querySelector("h2,h3"))return false;
+    try{var cs=getComputedStyle(el);if(cs.display==="none"||cs.visibility==="hidden")return false}catch(e){}
+    return true;
+  });
+}
+function level(){return Math.min(S.levelTitles.length,1+Math.floor(state.xp/120))}
+function pct(){return stops.length?Math.round(state.explored.length/stops.length*100):0}
+function renderHUD(){
+  if(!els.banner)return;
+  var done=state.explored.length,total=stops.length;
+  els.fill.style.width=pct()+"%";
+  els.progress.textContent=fmt(S.progress,{done:done,total:total});
+  if(PLAYFUL){els.xp.textContent="✦ "+state.xp+" XP · "+S.level+" "+level()+" · "+S.levelTitles[level()-1];els.pill.textContent="✦ "+pct()+"% · "+state.xp+" XP"}
+  else{els.pill.textContent=pct()+"% · "+done+"/"+total}
+  var half=total&&done>=Math.ceil(total/2), full=total&&done===total;
+  els.badges.innerHTML=[["first",done>=1],["half",half],["full",full]].map(function(b){return '<span class="gj-badge '+(b[1]?"":"locked")+'">'+(b[1]?"✓ ":"")+S.badges[b[0]]+"</span>"}).join("");
+  els.complete.style.display=full?"block":"none";
+  stops.forEach(function(st){var b=st.el.querySelector(":scope > .gj-chip .gj-mark")||st.el.querySelector(".gj-chip .gj-mark");if(b){var on=state.explored.indexOf(st.id)>-1;b.classList.toggle("done",on);b.textContent=on?S.marked:S.mark}});
+}
+function award(key,amt){if(state.bonuses[key])return;state.bonuses[key]=1;state.xp+=amt}
+function checkMilestones(){
+  var done=state.explored.length,total=stops.length;if(!total)return;
+  if(done>=Math.ceil(total/2))award("half",30);
+  if(done===total){award("full",50);confetti(90)}
+  save();renderHUD();
+}
+function markStop(id,on){
+  var i=state.explored.indexOf(id);
+  if(on&&i<0){state.explored.push(id);if(PLAYFUL||true)award("stop:"+id,20)}
+  if(!on&&i>-1){state.explored.splice(i,1)}
+  save();renderHUD();checkMilestones();
+}
+function buildStops(){
+  stops=findStops().map(function(el,i){var id=el.id||("gj-stop-"+(i+1));el.classList.add("gj-stop");return {el:el,id:id}});
+  stops.forEach(function(st,i){
+    if(st.el.querySelector(".gj-chip"))return;
+    var chip=document.createElement("div");chip.className="gj-chip";
+    chip.innerHTML='<span><span class="gj-stop-label">'+fmt(S.stopLabel,{n:i+1,total:stops.length})+'</span> <span class="gj-stop-title">'+stopTitle(st.el).replace(/</g,"&lt;")+'</span>'+(PLAYFUL?' <span class="gj-stop-title">'+S.xpPer+'</span>':"")+'</span>';
+    var b=document.createElement("button");b.type="button";b.className="gj-mark";b.textContent=S.mark;
+    b.addEventListener("click",function(){markStop(st.id,state.explored.indexOf(st.id)<0)});
+    chip.appendChild(b);st.el.insertBefore(chip,st.el.firstChild);
+  });
+}
+function scrollToEl(el){try{var y=el.getBoundingClientRect().top+window.scrollY-14;window.scrollTo({top:y,behavior:"smooth"})}catch(e){try{el.scrollIntoView()}catch(_){}}}
+function setCurrent(i){
+  state.current=Math.max(0,Math.min(stops.length-1,i));
+  stops.forEach(function(st,j){st.el.classList.toggle("gj-current",j===state.current)});
+  var nav=els.focusnav;if(nav){nav.querySelector(".gj-dots").innerHTML=stops.map(function(st,j){return '<button type="button" class="gj-dot'+(j===state.current?" now":"")+(state.explored.indexOf(st.id)>-1?" seen":"")+'" data-i="'+j+'" aria-label="'+(j+1)+'"></button>'}).join("");
+  nav.querySelector(".gj-next").textContent=state.current>=stops.length-1?S.finish:S.next}
+  scrollToEl(stops[state.current].el);
+}
+function enterFocus(at){
+  if(!stops.length)return;state.focus=true;document.body.classList.add("gj-focus");
+  var start=at!=null?at:stops.findIndex(function(st){return state.explored.indexOf(st.id)<0});
+  setCurrent(start<0?stops.length-1:start);
+}
+function exitFocus(){state.focus=false;document.body.classList.remove("gj-focus");stops.forEach(function(st){st.el.classList.remove("gj-current")})}
+function buildUI(){
+  var main=document.querySelector("main")||document.body;
+  var banner=document.createElement("section");banner.className="gj-banner";banner.id="gj-banner";
+  banner.innerHTML='<h2>'+S.bannerTitle+'</h2><p>'+S.bannerSub+'</p><div class="gj-bar"><i></i></div><div class="gj-stats"><span class="gj-progress"></span>'+(PLAYFUL?'<span class="gj-xp"></span>':"")+'</div><div class="gj-actions"><button type="button" class="gj-btn gj-resume">'+S.resume+'</button><button type="button" class="gj-btn ghost gj-focusbtn">'+S.focusOn+'</button></div><div class="gj-badges"></div><div class="gj-complete" style="display:none">'+S.completeMsg+'</div>';
+  try{if(stops.length&&stops[0].el.parentNode)stops[0].el.parentNode.insertBefore(banner,stops[0].el);else main.insertBefore(banner,main.firstChild)}catch(e){main.insertBefore(banner,main.firstChild)}
+  var pill=document.createElement("button");pill.type="button";pill.className="gj-pill";pill.addEventListener("click",function(){scrollToEl(banner)});
+  document.body.appendChild(pill);
+  var nav=document.createElement("div");nav.className="gj-focusnav";
+  nav.innerHTML='<button type="button" class="gj-exit">'+S.focusOff+'</button><button type="button" class="gj-prev">'+S.prev+'</button><span class="gj-dots"></span><button type="button" class="gj-next">'+S.next+'</button>';
+  document.body.appendChild(nav);
+  els={banner:banner,fill:banner.querySelector(".gj-bar i"),progress:banner.querySelector(".gj-progress"),xp:banner.querySelector(".gj-xp"),badges:banner.querySelector(".gj-badges"),complete:banner.querySelector(".gj-complete"),pill:pill,focusnav:nav};
+  banner.querySelector(".gj-resume").addEventListener("click",function(){var i=stops.findIndex(function(st){return state.explored.indexOf(st.id)<0});scrollToEl(i>-1?stops[i].el:banner)});
+  banner.querySelector(".gj-focusbtn").addEventListener("click",function(){enterFocus()});
+  nav.querySelector(".gj-exit").addEventListener("click",exitFocus);
+  nav.querySelector(".gj-prev").addEventListener("click",function(){setCurrent(state.current-1)});
+  nav.querySelector(".gj-next").addEventListener("click",function(){var st=stops[state.current];if(st)markStop(st.id,true);if(state.current>=stops.length-1){exitFocus();scrollToEl(banner)}else setCurrent(state.current+1)});
+  nav.querySelector(".gj-dots").addEventListener("click",function(e){var d=e.target.closest(".gj-dot");if(d)setCurrent(+d.dataset.i)});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&state.focus)exitFocus()});
+}
+var inited=false;
+function init(){
+  if(inited)return;
+  buildStops();
+  if(stops.length<3){stops=[];return}
+  accent();buildUI();renderHUD();inited=true;
+  var main=document.querySelector("main");
+  if(main&&typeof MutationObserver!=="undefined"){
+    var t;var ob=new MutationObserver(function(){if(state.focus)return;clearTimeout(t);t=setTimeout(function(){var before=stops.length;buildStops();if(stops.length!==before){var b=els.banner;if(b&&stops[0]&&stops[0].el.parentNode)try{stops[0].el.parentNode.insertBefore(b,stops[0].el)}catch(e){}renderHUD()}},450)});
+    ob.observe(main,{childList:true,subtree:false});
+    setTimeout(function(){ob.disconnect()},15000);
+  }
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",function(){init()});else init();
+[700,1800,3500].forEach(function(ms){setTimeout(init,ms)});
+})();
+
+</script>
+</body></html>
